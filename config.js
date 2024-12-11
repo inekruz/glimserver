@@ -1,10 +1,10 @@
 module.exports = {
     dbConfig: {
-      user: 'your_user',      
-      host: 'localhost',    
-      database: 'your_db',    
-      password: 'your_password',  
-      port: 5432,          
+      user: 'nekruz',      
+      host: '79.174.89.71',    
+      database: 'nekruz',    
+      password: '@Nekruz15.@',  
+      port: 19965,          
     }
   };
   
