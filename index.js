@@ -72,7 +72,7 @@ http.createServer((req, res) => {
 
 const sslOptions = {
   key: fs.readFileSync('/etc/letsencrypt/live/api.glimshop.ru/privkey.pem'), 
-  cert: fs.readFileSync('/etc/letsencrypt/live/api .glimshop.ru/cert.pem'), 
+  cert: fs.readFileSync('/etc/letsencrypt/live/api.glimshop.ru/cert.pem'), 
   ca: fs.readFileSync('/etc/letsencrypt/live/api.glimshop.ru/fullchain.pem')
 };
 
