@@ -42,7 +42,7 @@ app.post('/addUser', async (req, res) => {
     const checkResult = await client.query(checkQuery, [login]);
 
     if (checkResult.rows.length > 0) {
-      return res.status(400).json({ error: 'Логин уже существует!' });
+      return res.status(400).json({ error: 'Такой логин уже существует!' });
     }
   } catch (error) {
     console.error('Ошибка при проверке логина:', error);
@@ -59,6 +59,28 @@ app.post('/addUser', async (req, res) => {
     res.status(201).json({ message: 'Пользователь успешно добавлен' });
   } catch (error) {
     console.error('Ошибка при добавлении пользователя:', error);
+    res.status(500).json({ error: 'Внутренняя ошибка сервера' });
+  }
+});
+
+// Вход пользователя
+app.post('/login', async (req, res) => {
+  const { login, password } = req.body;
+  const hashedPassword = hashPassword(password);
+
+  try {
+    const query = 'SELECT * FROM Users WHERE login = $1 AND password = $2';
+    const result = await client.query(query, [login, hashedPassword]);
+
+    if (result.rows.length > 0) {
+     
+      res.status(200).json({ message: 'Вход выполнен успешно!' });
+    } else {
+      
+      res.status(401).json({ error: 'Неверный логин или пароль!' });
+    }
+  } catch (error) {
+    console.error('Ошибка при входе:', error);
     res.status(500).json({ error: 'Внутренняя ошибка сервера' });
   }
 });
