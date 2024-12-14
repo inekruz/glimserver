@@ -33,7 +33,7 @@ function hashPassword(password) {
 }
 
 // добавление пользователя
-app.post('/addUser  ', async (req, res) => {
+app.post('/addUser', async (req, res) => {
   const { login, fullname, address, phone_number, password, role } = req.body;
 
   // проверка на уникальность логина
