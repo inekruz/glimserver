@@ -85,6 +85,23 @@ app.post('/login', async (req, res) => {
   }
 });
 
+// Получения списка всех товаров
+app.post('/getProducts', async (req, res) => {
+  try {
+    const query = 'SELECT * FROM Products';
+    const result = await client.query(query);
+
+    if (result.rows.length > 0) {
+      res.status(200).json(result.rows);
+    } else {
+      res.status(404).json({ message: 'Товары не найдены!' });
+    }
+  } catch (error) {
+    console.error('Ошибка при получении товаров:', error);
+    res.status(500).json({ error: 'Внутренняя ошибка сервера' });
+  }
+});
+
 http.createServer((req, res) => {
   res.writeHead(301, { "Location": "https://" + req.headers['host'] + req.url });
   res.end();
