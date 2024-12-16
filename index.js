@@ -173,14 +173,14 @@ app.post('/login', async (req, res) => {
 // Получение данных пользователя по логину
 app.post('/getUser', async (req, res) => {
   const { login } = req.body;
-  console.log("login: ", login);
-  if (!login) {
+  console.log("login: ", login[0]);
+  if (!login[0]) {
     return res.status(400).json({ error: 'Логин не указан!' });
   }
 
   try {
     const query = 'SELECT * FROM Users WHERE login = $1';
-    const result = await client.query(query, [login]);
+    const result = await client.query(query, [login[0]]);
 
     if (result.rows.length > 0) {
       const user = result.rows[0];
