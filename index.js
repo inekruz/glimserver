@@ -171,7 +171,7 @@ app.post('/login', async (req, res) => {
 
 // Получение данных пользователя по логину
 app.post('/getUser', async (req, res) => {
-  const { login } = req.query;
+  const { login } = req.body;
 
   if (!login) {
     return res.status(400).json({ error: 'Логин не указан!' });
