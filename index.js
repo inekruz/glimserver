@@ -9,6 +9,7 @@ const config = require('./config');
 const cors = require('cors');
 const app = express();
 const axios = require('axios');
+const { log } = require('console');
 const portHttp = 80;  // HTTP
 const portHttps = 443;  // HTTPS
 
@@ -172,7 +173,7 @@ app.post('/login', async (req, res) => {
 // Получение данных пользователя по логину
 app.post('/getUser', async (req, res) => {
   const { login } = req.body;
-
+  console.log("login: ", login);
   if (!login) {
     return res.status(400).json({ error: 'Логин не указан!' });
   }
