@@ -19,31 +19,65 @@ client.connect()
   .catch(err => console.error('Ошибка подключения к базе данных:', err));
 
   const categories = ['Еда', 'Книги', 'Посуда', 'Аксессуары', 'Электроника', 'Одежда', 'Игрушки', 'Спорт', 'Косметика'];
-
+  
+  // Функция для генерации случайного пароля
+  function generateRandomPassword(length = 10) {
+      return crypto.randomBytes(length).toString('hex').slice(0, length); // Генерация случайного пароля
+  }
+  
+  // Функция для добавления пользователя
+  async function addUser(login, fullname, address, phone_number, password, role) {
+      const hashedPassword = hashPassword(password); // Предполагается, что у вас есть функция для хеширования паролей
+      const roleValue = role === 'Продавец' ? 1 : 0;
+  
+      const query = 'INSERT INTO Users (login, fullname, address, phone_number, password, role) VALUES ($1, $2, $3, $4, $5, $6)';
+      await client.query(query, [login, fullname, address, phone_number, hashedPassword, roleValue]);
+      console.log(`Пользователь добавлен: ${login}`);
+  }
+  
+  // Функция для генерации товаров
   async function generateProducts(count) {
       try {
 
+          // Генерируем пользователей
+          const users = [];
+          for (let i = 0; i < 5; i++) { // Генерируем 5 пользователей
+              const login = `user${i + 1}`;
+              const fullname = `Пользователь ${i + 1}`;
+              const address = `Адрес ${i + 1}`;
+              const phone_number = `+7 900 000 00 0${i + 1}`;
+              const password = generateRandomPassword(10); // Генерация случайного пароля длиной 10 символов
+              const role = 'Продавец'; // Чередуем роли
+  
+              await addUser (login, fullname, address, phone_number, password, role);
+              users.push(login); // Сохраняем логины добавленных пользователей
+          }
+  
+          // Генерируем товары
           for (let i = 0; i < count; i++) {
+              // Получаем случайные данные о товаре
               const response = await axios.get('https://fakerapi.it/api/v1/products?_quantity=1');
               const product = response.data.data[0];
   
+              // Подготовка данных для вставки
               const name = product.name;
-              const price = parseFloat((Math.random() * 1000).toFixed(2));
-              const user_key = 'user' + Math.floor(Math.random() * 10 + 1);
+              const price = parseFloat((Math.random() * 1000).toFixed(2)); // Генерация случайной цены
+              const user_key = users[Math.floor(Math.random() * users.length)]; // Случайный логин пользователя из добавленных
               const category = product.category || categories[Math.floor(Math.random() * categories.length)]; // Используем категорию из API или случайную категорию
-              const photo_id = null;
+              const photo_id = null; // Или укажите ID изображения, если у вас есть
   
+              // Вставка товара в базу данных
               const query = 'INSERT INTO Products (name, price, user_key, category, photo_id) VALUES ($1, $2, $3, $4, $5)';
               await client.query(query, [name, price, user_key, category, photo_id]);
   
-              console.log(`Товар добавлен: ${name}, Цена: ${price} ₽, Категория: ${category}`);
+              console.log(`Товар добавлен: ${name}, Цена: ${price} ₽, Категория: ${category}, Пользователь: ${user_key}`);
           }
   
           console.log('Генерация товаров завершена!');
       } catch (error) {
           console.error('Ошибка:', error);
       } finally {
-          await client.end();
+          await client.end(); // Отключаемся от базы данных после завершения всех операций
       }
   }
 
