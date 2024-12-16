@@ -14,6 +14,9 @@ const portHttps = 443;  // HTTPS
 
 const client = new Client(config.dbConfig);
 
+// ключ
+const secretKey = 'jFfh23-fh3ri8-JF73ry-shf32r';
+
 client.connect()
   .then(() => console.log('Подключение к базе данных успешно!'))
   .catch(err => console.error('Ошибка подключения к базе данных:', err));
@@ -88,9 +91,6 @@ app.use(cors());
 app.get('/', (req, res) => {
   res.send('Приветствую, сервер работает в штатном режиме!');
 });
-
-// ключ
-const secretKey = 'jFfh23-fh3ri8-JF73ry-shf32r';
 
 // хеширование
 function hashPassword(password) {
