@@ -18,32 +18,36 @@ client.connect()
   .then(() => console.log('Подключение к базе данных успешно!'))
   .catch(err => console.error('Ошибка подключения к базе данных:', err));
 
-async function generateProducts(count) {
-    try {
-        for (let i = 0; i < count; i++) {
+  const categories = ['Еда', 'Книги', 'Посуда', 'Аксессуары', 'Электроника', 'Одежда', 'Игрушки', 'Спорт', 'Косметика'];
 
-            const response = await axios.get('https://fakerapi.it/api/v1/products?_quantity=1');
-            const product = response.data.data[0];
-
-            const name = product.name;
-            const price = parseFloat((Math.random() * 1000).toFixed(2));
-            const user_key = 'user' + Math.floor(Math.random() * 10 + 1);
-            const category = product.category;
-            const photo_id = null;
-
-            const query = 'INSERT INTO Products (name, price, user_key, category, photo_id) VALUES ($1, $2, $3, $4, $5)';
-            await client.query(query, [name, price, user_key, category, photo_id]);
-
-            console.log(`Товар добавлен: ${name}, Цена: ${price} ₽`);
-        }
-
-        console.log('Генерация товаров завершена!');
-    } catch (error) {
-        console.error('Ошибка:', error);
-    } finally {
-        await client.end();
-    }
-}
+  async function generateProducts(count) {
+      try {
+          await client.connect();
+          console.log('Подключение к базе данных успешно!');
+  
+          for (let i = 0; i < count; i++) {
+              const response = await axios.get('https://fakerapi.it/api/v1/products?_quantity=1');
+              const product = response.data.data[0];
+  
+              const name = product.name;
+              const price = parseFloat((Math.random() * 1000).toFixed(2));
+              const user_key = 'user' + Math.floor(Math.random() * 10 + 1);
+              const category = product.category || categories[Math.floor(Math.random() * categories.length)]; // Используем категорию из API или случайную категорию
+              const photo_id = null;
+  
+              const query = 'INSERT INTO Products (name, price, user_key, category, photo_id) VALUES ($1, $2, $3, $4, $5)';
+              await client.query(query, [name, price, user_key, category, photo_id]);
+  
+              console.log(`Товар добавлен: ${name}, Цена: ${price} ₽, Категория: ${category}`);
+          }
+  
+          console.log('Генерация товаров завершена!');
+      } catch (error) {
+          console.error('Ошибка:', error);
+      } finally {
+          await client.end();
+      }
+  }
 
 generateProducts(1000);
 app.use(bodyParser.json());
