@@ -22,9 +22,7 @@ client.connect()
 
   async function generateProducts(count) {
       try {
-          await client.connect();
-          console.log('Подключение к базе данных успешно!');
-  
+
           for (let i = 0; i < count; i++) {
               const response = await axios.get('https://fakerapi.it/api/v1/products?_quantity=1');
               const product = response.data.data[0];
