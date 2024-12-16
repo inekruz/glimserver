@@ -64,21 +64,6 @@ client.connect()
   // Функция для генерации товаров
   async function generateProducts(count) {
       try {
-
-          // Генерируем пользователей
-          const users = [];
-          for (let i = 0; i < 5; i++) { // Генерируем 5 пользователей
-              const login = `user${i + 1}`;
-              const fullname = `Пользователь ${i + 1}`;
-              const address = `Адрес ${i + 1}`;
-              const phone_number = `+7 900 000 00 0${i + 1}`;
-              const password = generateRandomPassword(10); // Генерация случайного пароля длиной 10 символов
-              const role = 'Продавец'; // Чередуем роли
-  
-              await addUser (login, fullname, address, phone_number, password, role);
-              users.push(login); // Сохраняем логины добавленных пользователей
-          }
-  
         // Генерируем товары
         for (let i = 0; i < count; i++) {
           const product = await fetchProduct(); // Получаем случайные данные о товаре с учетом задержки
