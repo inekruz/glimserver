@@ -170,7 +170,7 @@ app.post('/login', async (req, res) => {
 });
 
 // Получение данных пользователя по логину
-app.get('/getUser', async (req, res) => {
+app.post('/getUser', async (req, res) => {
   const { login } = req.query;
 
   if (!login) {
