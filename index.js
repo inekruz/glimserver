@@ -38,6 +38,29 @@ client.connect()
       console.log(`Пользователь добавлен: ${login}`);
   }
   
+  async function fetchProduct() {
+    const url = 'https://fakerapi.it/api/v1/products?_quantity=1';
+    let attempts = 0;
+    const maxAttempts = 5;
+
+    while (attempts < maxAttempts) {
+        try {
+            const response = await axios.get(url);
+            return response.data.data[0]; // Возвращаем первый товар
+        } catch (error) {
+            if (error.response && error.response.status === 429) {
+                attempts++;
+                const retryAfter = error.response.headers['retry-after'] || 1; // Получаем время ожидания из заголовка или используем 1 секунду
+                console.log(`Слишком много запросов. Ожидание ${retryAfter} секунд...`);
+                await new Promise(resolve => setTimeout(resolve, retryAfter * 1000)); // Задержка перед повторной попыткой
+            } else {
+                throw error; // Если ошибка не 429, выбрасываем ее
+            }
+        }
+    }
+
+    throw new Error('Не удалось получить товар после нескольких попыток');
+}
   // Функция для генерации товаров
   async function generateProducts(count) {
       try {
@@ -56,33 +79,31 @@ client.connect()
               users.push(login); // Сохраняем логины добавленных пользователей
           }
   
-          // Генерируем товары
-          for (let i = 0; i < count; i++) {
-              // Получаем случайные данные о товаре
-              const response = await axios.get('https://fakerapi.it/api/v1/products?_quantity=1');
-              const product = response.data.data[0];
-  
-              // Подготовка данных для вставки
-              const name = product.name;
-              const price = parseFloat((Math.random() * 1000).toFixed(2)); // Генерация случайной цены
-              const user_key = users[Math.floor(Math.random() * users.length)]; // Случайный логин пользователя из добавленных
-              const category = product.category || categories[Math.floor(Math.random() * categories.length)]; // Используем категорию из API или случайную категорию
-              const photo_id = null; // Или укажите ID изображения, если у вас есть
-  
-              // Вставка товара в базу данных
-              const query = 'INSERT INTO Products (name, price, user_key, category, photo_id) VALUES ($1, $2, $3, $4, $5)';
-              await client.query(query, [name, price, user_key, category, photo_id]);
-  
-              console.log(`Товар добавлен: ${name}, Цена: ${price} ₽, Категория: ${category}, Пользователь: ${user_key}`);
-          }
-  
-          console.log('Генерация товаров завершена!');
-      } catch (error) {
-          console.error('Ошибка:', error);
-      } finally {
-          await client.end(); // Отключаемся от базы данных после завершения всех операций
+        // Генерируем товары
+        for (let i = 0; i < count; i++) {
+          const product = await fetchProduct(); // Получаем случайные данные о товаре с учетом задержки
+
+          // Подготовка данных для вставки
+          const name = product.name;
+          const price = parseFloat((Math.random() * 1000).toFixed(2)); // Генерация случайной цены
+          const user_key = users[Math.floor(Math.random() * users.length)]; // Случайный логин пользователя из добавленных
+          const category = product.category || categories[Math.floor(Math.random() * categories.length)]; // Используем категорию из API или случайную категорию
+          const photo_id = null; // Или укажите ID изображения, если у вас есть
+
+          // Вставка товара в базу данных
+          const query = 'INSERT INTO Products (name, price, user_key, category, photo_id) VALUES ($1, $2, $3, $4, $5)';
+          await client.query(query, [name, price, user_key, category, photo_id]);
+
+          console.log(`Товар добавлен: ${name}, Цена: ${price} ₽, Категория: ${category}, Пользователь: ${user_key}`);
       }
+
+      console.log('Генерация товаров завершена!');
+  } catch (error) {
+      console.error('Ошибка:', error);
+  } finally {
+      await client.end(); // Отключаемся от базы данных после завершения всех операций
   }
+}
 
 generateProducts(1000);
 app.use(bodyParser.json());
