@@ -169,6 +169,32 @@ app.post('/login', async (req, res) => {
   }
 });
 
+// Получение данных пользователя по логину
+app.get('/getUser ', async (req, res) => {
+  const { login } = req.query;
+
+  if (!login) {
+    return res.status(400).json({ error: 'Логин не указан!' });
+  }
+
+  try {
+    const query = 'SELECT * FROM Users WHERE login = $1';
+    const result = await client.query(query, [login]);
+
+    if (result.rows.length > 0) {
+      const user = result.rows[0];
+      // Убираем пароль из ответа
+      const { password, ...userData } = user;
+      res.status(200).json(userData);
+    } else {
+      res.status(404).json({ error: 'Пользователь не найден!' });
+    }
+  } catch (error) {
+    console.error('Ошибка при получении пользователя:', error);
+    res.status(500).json({ error: 'Внутренняя ошибка сервера' });
+  }
+});
+
 // Получения списка всех товаров
 app.post('/getProducts', async (req, res) => {
   try {
