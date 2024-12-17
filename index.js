@@ -436,7 +436,7 @@ app.post('/addProduct', async (req, res) => {
   const { login, price, name, category } = req.body;
 
   try {
-    const result = await pool.query(
+    const result = await client.query(
       'INSERT INTO Products (name, price, user_key, category, photo_id, likes) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
       [name, price, login, category, 1, 0]
     );
