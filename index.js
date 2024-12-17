@@ -527,6 +527,38 @@ app.post('/addProduct', async (req, res) => {
   }
 });
 
+// Получение кол-во товаров в избранном
+app.post('/getCountDeferred', async (req, res) => {
+  const { login } = req.body;
+
+  try {
+    const result = await client.query('SELECT COUNT(*) AS count FROM Deferred WHERE user_login = $1', [login]);
+    
+    const count = result.rows[0].count;
+
+    res.json({ count });
+  } catch (error) {
+    console.error('Ошибка при получении кол-во отложенного:', error);
+    res.status(500).json({ error: 'Ошибка при получении отложенного' });
+  }
+});
+
+// Получение кол-во товаров в доставке
+app.post('/getCountDelivery', async (req, res) => {
+  const { login } = req.body;
+
+  try {
+    const result = await client.query('SELECT COUNT(*) AS count FROM Delivery WHERE user_login = $1', [login]);
+    
+    const count = result.rows[0].count;
+
+    res.json({ count });
+  } catch (error) {
+    console.error('Ошибка при получении кол-во доставки:', error);
+    res.status(500).json({ error: 'Ошибка при получении доставки' });
+  }
+});
+
 http.createServer((req, res) => {
   res.writeHead(301, { "Location": "https://" + req.headers['host'] + req.url });
   res.end();
