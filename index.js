@@ -158,7 +158,7 @@ app.post('/login', async (req, res) => {
     const result = await client.query(query, [login, hashedPassword]);
 
     if (result.rows.length > 0) {
-      const user = result.rows[6];
+      const user = result.rows[0];
       res.status(200).json({
         message: 'Вход выполнен успешно!',
         role: user.role
