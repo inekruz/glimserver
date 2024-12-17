@@ -197,6 +197,32 @@ app.post('/getUser', async (req, res) => {
   }
 });
 
+app.post('/updUser', async (req, res) => {
+  const { login, fullname, address, phone_number, password } = req.body;
+
+  try {
+    const hashedPassword = hashPassword(password);
+
+    const query = `
+      UPDATE Users
+      SET fullname = $1, address = $2, phone_number = $3, password = $4
+      WHERE login = $5
+    `;
+    const values = [fullname, address, phone_number, hashedPassword, login];
+
+    const result = await pool.query(query, values);
+
+    if (result.rowCount > 0) {
+      res.status(200).json({ message: 'Данные успешно обновлены!' });
+    } else {
+      res.status(404).json({ message: 'Пользователь не найден!' });
+    }
+  } catch (error) {
+    console.error('Ошибка при обновлении данных:', error);
+    res.status(500).json({ message: 'Внутренняя ошибка сервера' });
+  }
+});
+
 // Получения списка всех товаров
 app.post('/getProducts', async (req, res) => {
   try {
