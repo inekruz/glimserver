@@ -432,6 +432,21 @@ app.post('/getDelivery', async (req, res) => {
   }
 });
 
+app.post('/addProduct', async (req, res) => {
+  const { login, price, name, category } = req.body;
+
+  try {
+    const result = await pool.query(
+      'INSERT INTO Products (name, price, user_key, category, photo_id, likes) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      [name, price, login, category, 1, 0]
+    );
+
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Ошибка при добавлении товара:', error);
+    res.status(500).json({ error: 'Внутренняя ошибка сервера' });
+  }
+});
 http.createServer((req, res) => {
   res.writeHead(301, { "Location": "https://" + req.headers['host'] + req.url });
   res.end();
