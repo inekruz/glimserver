@@ -10,6 +10,7 @@ const cors = require('cors');
 const app = express();
 const axios = require('axios');
 const { log } = require('console');
+const { startupSnapshot } = require('v8');
 const portHttp = 80;  // HTTP
 const portHttps = 443;  // HTTPS
 
@@ -287,7 +288,7 @@ app.post('/setDeferred', async (req, res) => {
     }
   } catch (error) {
     console.error('Error executing query', error.stack);
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(500).json({ error: 'Внутренняя ошибка сервера' });
   }
 });
 
@@ -323,7 +324,111 @@ app.delete('/delDeferred', async (req, res) => {
     }
   } catch (error) {
     console.error('Error executing query', error.stack);
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(500).json({ error: 'Внутренняя ошибка сервера' });
+  }
+});
+
+app.post('/addBasket', async (req, res) => {
+  const { login, product_id, product_name, product_price, product_category, product_photo_id } = req.body;
+
+  try {
+    const checkQuery = 'SELECT * FROM Basket WHERE product_id = $1 AND user_login = $2';
+    const checkValues = [product_id, login];
+    const checkResult = await client.query(checkQuery, checkValues);
+
+    if (checkResult.rows.length > 0) {
+      const existingRecord = checkResult.rows[0];
+      const newCount = Number(existingRecord.count) + 1;
+
+      const updateQuery = 'UPDATE Basket SET count = $1 WHERE id = $2';
+      const updateValues = [newCount, existingRecord.id];
+      await client.query(updateQuery, updateValues);
+
+      res.status(200).json({ message: 'Count updated successfully', count: newCount });
+    } else {
+      const insertQuery = 'INSERT INTO Basket (product_id, product_name, product_price, product_category, product_photo_id, user_login, count) VALUES ($1, $2, $3, $4, $5, $6, $7)';
+      const insertValues = [product_id, product_name, product_price, product_category, product_photo_id, login, 1];
+      await client.query(insertQuery, insertValues);
+
+      res.status(201).json({ message: 'Товар добавлен в корзину!' });
+    }
+  } catch (error) {
+    console.error('Ошибка при добавлении в корзину ', error.stack);
+    res.status(500).json({ error: 'Внутренняя ошибка сервера' });
+  }
+});
+
+app.post('/getBasket', async (req, res) => {
+  const { login } = req.body;
+
+  try {
+    const result = await client.query('SELECT * FROM Basket WHERE user_login = $1', [login]);
+    
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Ошибка при получении корзины:', error);
+    res.status(500).json({ error: 'Ошибка при получении корзины' });
+  }
+});
+
+app.delete('/delBasket', async (req, res) => {
+  const { login, product_id } = req.body;
+
+  try {
+    const checkQuery = 'SELECT * FROM Basket WHERE product_id = $1 AND user_login = $2';
+    const checkValues = [product_id, login];
+    const checkResult = await client.query(checkQuery, checkValues);
+
+    if (checkResult.rows.length > 0) {
+      const deleteQuery = 'DELETE FROM Basket WHERE product_id = $1 AND user_login = $2';
+      const deleteValues = [product_id, login];
+      await client.query(deleteQuery, deleteValues);
+
+      res.status(200).json({ message: 'Товар удален из корзины!' });
+    } else {
+      res.status(404).json({ message: 'Товар не найден!' });
+    }
+  } catch (error) {
+    console.error('Ошибка при удалении из корзины', error.stack);
+    res.status(500).json({ error: 'Внутренняя ошибка сервера' });
+  }
+});
+
+app.post('/addDelivery', async (req, res) => {
+  const { login, product_id, product_name, product_price, product_category } = req.body;
+
+  const statuses = ['В пути', 'В обработке', 'Передается в доставку', 'Доставлено', 'Отменено'];
+  
+  const getRandomStatus = () => {
+    const randomIndex = Math.floor(Math.random() * statuses.length);
+    return statuses[randomIndex];
+  };
+
+  try {
+    const status = getRandomStatus();
+
+    const insertQuery = 'INSERT INTO Delivery (product_id, product_name, product_price, product_category, status, user_login) VALUES ($1, $2, $3, $4, $5, $6)';
+    const insertValues = [product_id, product_name, product_price, product_category, status, login];
+    await client.query(insertQuery, insertValues);
+
+    res.status(201).json({ message: 'Товар успешно приобретен!' });
+  
+  } catch (error) {
+    console.error('Ошибка при покупке товара: ', error.stack);
+    res.status(500).json({ error: 'Внутренняя ошибка сервера' });
+  }
+});
+
+app.post('/getDelivery', async (req, res) => {
+  const { login } = req.body;
+
+  try {
+    const result = await client.query('SELECT * FROM Delivery WHERE user_login = $1', [login]);
+    
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Ошибка при получении корзины:', error);
+    res.status(500).json({ error: 'Ошибка при получении корзины' });
   }
 });
 
