@@ -265,7 +265,7 @@ app.post('/setDeferred', async (req, res) => {
   const { login, product_id } = req.body;
 
   try {
-    const result = await pool.query(
+    const result = await client.query(
       'SELECT * FROM Deferred WHERE product_id = $1 AND user_login = $2',
       [product_id, login]
     );
@@ -274,14 +274,14 @@ app.post('/setDeferred', async (req, res) => {
       const existingRecord = result.rows[0];
       const newCount = existingRecord.count + 1;
 
-      await pool.query(
+      await client.query(
         'UPDATE Deferred SET count = $1 WHERE id = $2',
         [newCount, existingRecord.id]
       );
 
       return res.status(200).json({ message: 'Count updated', count: newCount });
     } else {
-      await pool.query(
+      await client.query(
         'INSERT INTO Deferred (product_id, user_login, count) VALUES ($1, $2, $3)',
         [product_id, login, 1]
       );
@@ -291,6 +291,35 @@ app.post('/setDeferred', async (req, res) => {
   } catch (error) {
     console.error('Error executing query', error.stack);
     return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.post('/getDeferred', async (req, res) => {
+  const { login } = req.body;
+
+  try {
+    const deferredResult = await client.query('SELECT * FROM Deferred WHERE user_login = $1', [login]);
+
+    if (deferredResult.rows.length === 0) {
+      return res.json([]);
+    }
+
+    const productIds = deferredResult.rows.map(row => row.product_id);
+
+    const productsResult = await client.query('SELECT * FROM Products WHERE id = ANY($1)', [productIds]);
+
+    const responseData = deferredResult.rows.map(deferredRow => {
+      const product = productsResult.rows.find(productRow => productRow.id === deferredRow.product_id);
+      return {
+        product: product || null,
+        count: deferredRow.count,
+      };
+    });
+
+    res.json(responseData);
+  } catch (error) {
+    console.error('Ошибка при выполнении запроса:', error);
+    res.status(500).json({ error: 'Ошибка при получении данных' });
   }
 });
 
