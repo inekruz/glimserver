@@ -262,35 +262,32 @@ app.post('/getAddress', async (req, res) => {
 });
 
 app.post('/setDeferred', async (req, res) => {
-  const { login, product_id } = req.body;
+  const { login, product_id, product_name, product_price, product_category, product_photo_id } = req.body;
 
   try {
-    const result = await client.query(
-      'SELECT * FROM Deferred WHERE product_id = $1 AND user_login = $2',
-      [product_id, login]
-    );
+    const checkQuery = 'SELECT * FROM Deferred WHERE product_id = $1 AND user_login = $2';
+    const checkValues = [product_id, login];
+    const checkResult = await client.query(checkQuery, checkValues);
 
-    if (result.rows.length > 0) {
-      const existingRecord = result.rows[0];
+    if (checkResult.rows.length > 0) {
+      const existingRecord = checkResult.rows[0];
       const newCount = existingRecord.count + 1;
 
-      await client.query(
-        'UPDATE Deferred SET count = $1 WHERE id = $2',
-        [newCount, existingRecord.id]
-      );
+      const updateQuery = 'UPDATE Deferred SET count = $1 WHERE id = $2';
+      const updateValues = [newCount, existingRecord.id];
+      await client.query(updateQuery, updateValues);
 
-      return res.status(200).json({ message: 'Count updated', count: newCount });
+      res.status(200).json({ message: 'Count updated successfully', count: newCount });
     } else {
-      await client.query(
-        'INSERT INTO Deferred (product_id, user_login, count) VALUES ($1, $2, $3)',
-        [product_id, login, 1]
-      );
+      const insertQuery = 'INSERT INTO Deferred (product_id, product_name, product_price, product_category, product_photo_id, user_login, count) VALUES ($1, $2, $3, $4, $5, $6, $7)';
+      const insertValues = [product_id, product_name, product_price, product_category, product_photo_id, login, 1];
+      await client.query(insertQuery, insertValues);
 
-      return res.status(201).json({ message: 'New record created', count: 1 });
+      res.status(201).json({ message: 'Product added to deferred list' });
     }
   } catch (error) {
     console.error('Error executing query', error.stack);
-    return res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
@@ -298,28 +295,12 @@ app.post('/getDeferred', async (req, res) => {
   const { login } = req.body;
 
   try {
-    const deferredResult = await client.query('SELECT * FROM Deferred WHERE user_login = $1', [login]);
-
-    if (deferredResult.rows.length === 0) {
-      return res.json([]);
-    }
-
-    const productIds = deferredResult.rows.map(row => row.product_id);
-
-    const productsResult = await client.query('SELECT * FROM Products WHERE id = ANY($1)', [productIds]);
-
-    const responseData = deferredResult.rows.map(deferredRow => {
-      const product = productsResult.rows.find(productRow => productRow.id === deferredRow.product_id);
-      return {
-        product: product || null,
-        count: deferredRow.count,
-      };
-    });
-
-    res.json(responseData);
+    const result = await client.query('SELECT * FROM Deferred WHERE user_login = $1', [login]);
+    
+    res.json(result.rows);
   } catch (error) {
-    console.error('Ошибка при выполнении запроса:', error);
-    res.status(500).json({ error: 'Ошибка при получении данных' });
+    console.error('Ошибка при получении отложенного:', error);
+    res.status(500).json({ error: 'Ошибка при получении отложенного' });
   }
 });
 
