@@ -158,10 +158,12 @@ app.post('/login', async (req, res) => {
     const result = await client.query(query, [login, hashedPassword]);
 
     if (result.rows.length > 0) {
-     
-      res.status(200).json({ message: 'Вход выполнен успешно!' });
+      const user = result.rows[6];
+      res.status(200).json({
+        message: 'Вход выполнен успешно!',
+        role: user.role
+      });
     } else {
-      
       res.status(401).json({ error: 'Неверный логин или пароль!' });
     }
   } catch (error) {
