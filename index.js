@@ -261,6 +261,58 @@ app.post('/getProductsUser', async (req, res) => {
   }
 });
 
+// Обновление данных о товаре
+app.post('/updProductsUser', async (req, res) => {
+  const { login, id, name, category, price } = req.body;
+
+  try {
+    const checkQuery = 'SELECT * FROM Products WHERE user_key = $1 AND id = $2';
+    const checkValues = [login, id];
+    const checkResult = await client.query(checkQuery, checkValues);
+
+    if (checkResult.rows.length > 0) {
+      const updateQuery = `
+        UPDATE Products 
+        SET name = $1, category = $2, price = $3 
+        WHERE user_key = $4 AND id = $5
+      `;
+      const updateValues = [name, category, price, login, id];
+      await client.query(updateQuery, updateValues);
+
+      res.status(200).json({ message: 'Товар успешно обновлен!' });
+    } else {
+      res.status(404).json({ message: 'Товар не найден!' });
+    }
+  } catch (error) {
+    console.error('Ошибка при обновлении товара:', error);
+    res.status(500).json({ message: 'Внутренняя ошибка сервера' });
+  }
+});
+
+// Удаление товара
+app.post('/delProductUser', async (req, res) => {
+  const { login, id } = req.body;
+
+  try {
+    const checkQuery = 'SELECT * FROM Products WHERE user_key = $1 AND id = $2';
+    const checkValues = [login, id];
+    const checkResult = await client.query(checkQuery, checkValues);
+
+    if (checkResult.rows.length > 0) {
+      const deleteQuery = 'DELETE FROM Products WHERE user_key = $1 AND id = $2';
+      const deleteValues = [login, id];
+      await client.query(deleteQuery, deleteValues);
+
+      res.status(200).json({ message: 'Товар успешно удален!' });
+    } else {
+      res.status(404).json({ message: 'Товар не найден!' });
+    }
+  } catch (error) {
+    console.error('Ошибка при удалении товара:', error);
+    res.status(500).json({ message: 'Внутренняя ошибка сервера' });
+  }
+});
+
 // Получения списка всех товаров
 app.post('/getAddress', async (req, res) => {
   const { login } = req.body;
@@ -280,6 +332,7 @@ app.post('/getAddress', async (req, res) => {
   }
 });
 
+// Добавление товара в отложенное
 app.post('/setDeferred', async (req, res) => {
   const { login, product_id, product_name, product_price, product_category, product_photo_id } = req.body;
 
@@ -296,20 +349,21 @@ app.post('/setDeferred', async (req, res) => {
       const updateValues = [newCount, existingRecord.id];
       await client.query(updateQuery, updateValues);
 
-      res.status(200).json({ message: 'Count updated successfully', count: newCount });
+      res.status(200).json({ message: 'Количество обновлено', count: newCount });
     } else {
       const insertQuery = 'INSERT INTO Deferred (product_id, product_name, product_price, product_category, product_photo_id, user_login, count) VALUES ($1, $2, $3, $4, $5, $6, $7)';
       const insertValues = [product_id, product_name, product_price, product_category, product_photo_id, login, 1];
       await client.query(insertQuery, insertValues);
 
-      res.status(201).json({ message: 'Product added to deferred list' });
+      res.status(201).json({ message: 'Товар успешно добавлен в отложенное!' });
     }
   } catch (error) {
-    console.error('Error executing query', error.stack);
+    console.error('Ошибка при добавлении в отложенное', error.stack);
     res.status(500).json({ error: 'Внутренняя ошибка сервера' });
   }
 });
 
+// Получение списка отложенных
 app.post('/getDeferred', async (req, res) => {
   const { login } = req.body;
 
@@ -323,6 +377,7 @@ app.post('/getDeferred', async (req, res) => {
   }
 });
 
+// Удаление товара из отложенного
 app.delete('/delDeferred', async (req, res) => {
   const { login, product_id } = req.body;
 
@@ -346,6 +401,7 @@ app.delete('/delDeferred', async (req, res) => {
   }
 });
 
+// Добавление товара в корзину
 app.post('/addBasket', async (req, res) => {
   const { login, product_id, product_name, product_price, product_category, product_photo_id } = req.body;
 
@@ -376,6 +432,7 @@ app.post('/addBasket', async (req, res) => {
   }
 });
 
+// Получение списка товаров в корзине
 app.post('/getBasket', async (req, res) => {
   const { login } = req.body;
 
@@ -389,6 +446,7 @@ app.post('/getBasket', async (req, res) => {
   }
 });
 
+// Удаление товара из корзины
 app.delete('/delBasket', async (req, res) => {
   const { login, product_id } = req.body;
 
@@ -412,6 +470,7 @@ app.delete('/delBasket', async (req, res) => {
   }
 });
 
+// Добавление товара в доставку
 app.post('/addDelivery', async (req, res) => {
   const { login, product_id, product_name, product_price, product_category } = req.body;
 
@@ -437,6 +496,7 @@ app.post('/addDelivery', async (req, res) => {
   }
 });
 
+// Получение списка товаров в доставке
 app.post('/getDelivery', async (req, res) => {
   const { login } = req.body;
 
@@ -445,11 +505,12 @@ app.post('/getDelivery', async (req, res) => {
     
     res.json(result.rows);
   } catch (error) {
-    console.error('Ошибка при получении корзины:', error);
-    res.status(500).json({ error: 'Ошибка при получении корзины' });
+    console.error('Ошибка при получении доставки:', error);
+    res.status(500).json({ error: 'Ошибка при получении доставки' });
   }
 });
 
+// Добавление товара
 app.post('/addProduct', async (req, res) => {
   const { login, price, name, category } = req.body;
 
@@ -465,6 +526,7 @@ app.post('/addProduct', async (req, res) => {
     res.status(500).json({ error: 'Внутренняя ошибка сервера' });
   }
 });
+
 http.createServer((req, res) => {
   res.writeHead(301, { "Location": "https://" + req.headers['host'] + req.url });
   res.end();
