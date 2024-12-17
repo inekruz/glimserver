@@ -243,6 +243,24 @@ app.post('/getProducts', async (req, res) => {
   }
 });
 
+// Получения списка всех товаров одного продавца
+app.post('/getProductsUser', async (req, res) => {
+  const { login } = req.body;
+  try {
+    const query = 'SELECT * FROM Products WHERE login = $1';
+    const result = await client.query(query, [login]);
+
+    if (result.rows.length > 0) {
+      res.status(200).json(result.rows);
+    } else {
+      res.status(404).json({ message: 'Товары не найдены!' });
+    }
+  } catch (error) {
+    console.error('Ошибка при получении товаров:', error);
+    res.status(500).json({ error: 'Внутренняя ошибка сервера' });
+  }
+});
+
 // Получения списка всех товаров
 app.post('/getAddress', async (req, res) => {
   const { login } = req.body;
