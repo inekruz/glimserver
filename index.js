@@ -212,7 +212,7 @@ app.post('/updUser', async (req, res) => {
     `;
     const values = [fullname, address, phone_number, hashedPassword, login];
 
-    const result = await pool.query(query, values);
+    const result = await client.query(query, values);
 
     if (result.rowCount > 0) {
       res.status(200).json({ message: 'Данные успешно обновлены!' });
