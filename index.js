@@ -271,7 +271,7 @@ app.post('/setDeferred', async (req, res) => {
 
     if (checkResult.rows.length > 0) {
       const existingRecord = checkResult.rows[0];
-      const newCount = existingRecord.count + 1;
+      const newCount = Number(existingRecord.count) + 1;
 
       const updateQuery = 'UPDATE Deferred SET count = $1 WHERE id = $2';
       const updateValues = [newCount, existingRecord.id];
