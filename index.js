@@ -242,6 +242,25 @@ app.post('/getProducts', async (req, res) => {
   }
 });
 
+// Получения списка всех товаров
+app.post('/getAddress', async (req, res) => {
+  const { login } = req.body;
+  console.log("address:", login);
+  try {
+    const query = 'SELECT address FROM Users WHERE login = $1';
+    const result = await client.query(query, [login]);
+
+    if (result.rows.length > 0) {
+      res.status(200).json(result.rows);
+    } else {
+      res.status(404).json({ message: 'Адрес не найден!' });
+    }
+  } catch (error) {
+    console.error('Ошибка при получении адреса:', error);
+    res.status(500).json({ error: 'Внутренняя ошибка сервера' });
+  }
+});
+
 http.createServer((req, res) => {
   res.writeHead(301, { "Location": "https://" + req.headers['host'] + req.url });
   res.end();
