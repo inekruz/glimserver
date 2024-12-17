@@ -474,7 +474,7 @@ app.delete('/delBasket', async (req, res) => {
 app.post('/addDelivery', async (req, res) => {
   const { login, product_id, product_name, product_price, product_category } = req.body;
 
-  const statuses = ['В пути', 'В обработке', 'Передается в доставку', 'Доставлено', 'Отменено'];
+  const statuses = ['В пути', 'В обработке', 'Передается в доставку', 'Доставлено'];
   
   const getRandomStatus = () => {
     const randomIndex = Math.floor(Math.random() * statuses.length);
