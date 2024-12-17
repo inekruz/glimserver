@@ -247,7 +247,7 @@ app.post('/getProducts', async (req, res) => {
 app.post('/getProductsUser', async (req, res) => {
   const { login } = req.body;
   try {
-    const query = 'SELECT * FROM Products WHERE login = $1';
+    const query = 'SELECT * FROM Products WHERE user_key = $1';
     const result = await client.query(query, [login]);
 
     if (result.rows.length > 0) {
