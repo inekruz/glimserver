@@ -261,6 +261,39 @@ app.post('/getAddress', async (req, res) => {
   }
 });
 
+app.post('/setDeferred', async (req, res) => {
+  const { login, product_id } = req.body;
+
+  try {
+    const result = await pool.query(
+      'SELECT * FROM Deferred WHERE product_id = $1 AND user_login = $2',
+      [product_id, login]
+    );
+
+    if (result.rows.length > 0) {
+      const existingRecord = result.rows[0];
+      const newCount = existingRecord.count + 1;
+
+      await pool.query(
+        'UPDATE Deferred SET count = $1 WHERE id = $2',
+        [newCount, existingRecord.id]
+      );
+
+      return res.status(200).json({ message: 'Count updated', count: newCount });
+    } else {
+      await pool.query(
+        'INSERT INTO Deferred (product_id, user_login, count) VALUES ($1, $2, $3)',
+        [product_id, login, 1]
+      );
+
+      return res.status(201).json({ message: 'New record created', count: 1 });
+    }
+  } catch (error) {
+    console.error('Error executing query', error.stack);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 http.createServer((req, res) => {
   res.writeHead(301, { "Location": "https://" + req.headers['host'] + req.url });
   res.end();
