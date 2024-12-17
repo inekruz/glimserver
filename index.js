@@ -304,6 +304,29 @@ app.post('/getDeferred', async (req, res) => {
   }
 });
 
+app.delete('/delDeferred', async (req, res) => {
+  const { login, product_id } = req.body;
+
+  try {
+    const checkQuery = 'SELECT * FROM Deferred WHERE product_id = $1 AND user_login = $2';
+    const checkValues = [product_id, login];
+    const checkResult = await client.query(checkQuery, checkValues);
+
+    if (checkResult.rows.length > 0) {
+      const deleteQuery = 'DELETE FROM Deferred WHERE product_id = $1 AND user_login = $2';
+      const deleteValues = [product_id, login];
+      await client.query(deleteQuery, deleteValues);
+
+      res.status(200).json({ message: 'Product removed from deferred list' });
+    } else {
+      res.status(404).json({ message: 'Product not found in deferred list' });
+    }
+  } catch (error) {
+    console.error('Error executing query', error.stack);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 http.createServer((req, res) => {
   res.writeHead(301, { "Location": "https://" + req.headers['host'] + req.url });
   res.end();
